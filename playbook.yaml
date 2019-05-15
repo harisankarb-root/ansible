@@ -1,0 +1,25 @@
+#Write an Ansible Playbook to find the servers from a pool of servers in which CPU usage is above 30% and Memory Usage is above 50%.
+
+---
+- hosts: test
+  tasks:
+    - name: Get CPU usage
+      shell: "top -b -n 1"
+      register: top
+
+    - name: Get free memory
+      shell: "echo $(free -m | grep '^Mem' | awk '{print $4}')"
+      register: freememo
+
+    - name: Get half memory
+      shell: "echo $(($(free -m | grep '^Mem' | awk '{print $2}') / 2))"
+      register: halfmemo
+
+    - set_fact:
+        system_cpu: "{{top.stdout_lines[2].split()[3]}}"
+        freem: "{{ freememo.stdout }}"
+        halfm: "{{ halfmemo.stdout }}"
+    - name: Final result
+      debug:
+        var: ansible_default_ipv4.address
+      when: system_cpu|int > 30 and freem|int < halfm|int
